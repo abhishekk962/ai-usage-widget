@@ -2,6 +2,8 @@
 
 AI Usage Widget is a floating desktop counter for traffic that matches a ChatGPT message-start pattern. It shows today's detections, a monthly heatmap, and a per-day activity chart. It runs locally using packet metadata and stores its history in SQLite.
 
+The widget takes a non-invasive approach to usage tracking. It passively infers likely message starts from packet sizes, timing, and direction in encrypted traffic. Detection runs independently of browser extensions, proxies, and account integrations. Once packet capture is available, the same approach can work across browsers, desktop clients, and operating systems that produce a matching TCP pattern, with zero per-app setup.
+
 ![AI Usage Widget showing the monthly calendar, daily activity chart, and floating counter](assets/ai-usage-widget.png)
 
 ## Run on Windows
