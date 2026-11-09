@@ -2,6 +2,8 @@
 
 AI Usage Widget is a floating desktop counter for traffic that matches a ChatGPT message-start pattern. It shows today's detections, a monthly heatmap, and a per-day activity chart. It runs locally using packet metadata and stores its history in SQLite.
 
+![AI Usage Widget showing the monthly calendar, daily activity chart, and floating counter](assets/ai-usage-widget.png)
+
 ## Run on Windows
 
 Install Python and Npcap for live capture. Open PowerShell in this repository and create an environment. The versions in `requirements.txt` were tested with Python 3.10.6.
@@ -29,8 +31,10 @@ Click the circle to open the calendar, use the arrows to change months, and sele
 - SQLite stores one row per detected start, keyed by the first packet's timestamp and both IP and port pairs. Capture and UI use separate connections in WAL mode. The history includes endpoint metadata. Packet payloads and full capture files are excluded from storage.
 - Calendar cells count starts by local date, with shading breakpoints at 1, 3, 6, and 10 starts. The chart counts starts in 15-minute local-time bins. It draws a five-bin weighted average with weights `1, 2, 3, 2, 1` renormalized at the edges and shows the raw count on hover.
 
-## How a detection is counted
+## Methodology
 
-The detector ignores packets of 80 bytes or less. It looks for two outgoing large–small pairs on the same TCP connection. The first large packet is 16,000–30,000 bytes, the second is 12,000–18,000 bytes, and each is followed by a packet of 81–11,999 bytes within 80 ms. Both pairs must fit within 800 ms. A one-second per-connection debounce suppresses repeated starts.
+1. **Label activity.** The research started with manually labeled packet windows, followed by a browser extension that recorded when chats started. A proxy later provided timestamps for the underlying HTTP requests and responses.
+2. **Align and visualize.** Network packets and decrypted HTTP requests and responses were captured separately, loaded into SQLite, and aligned by time and connection. Log-scale plots of sent and received packet sizes revealed recurring patterns around known chat starts.
+3. **Detect starts.** Those patterns informed a rule based on packet sizes and timing. The detector looks for two large outgoing packets, each quickly followed by a smaller one, on the same TCP connection. When the sequence matches, the widget records the time of the first packet as a likely chat start.
 
-Once the fourth packet confirms the sequence, the widget records the timestamp of the first large packet. The count includes starts whose response end is missed. A match is a traffic signature, so unrelated TCP traffic can match and genuine messages can be missed. See [Methodology](METHODOLOGY.md) for the exact pairing rules, the original capture workflow, and the evidence behind the thresholds.
+The widget currently shows when chat requests started. Further research could test whether packet patterns can reveal how long the AI streamed, roughly how many tokens were sent and received, which model was used, or how much context was sent.
